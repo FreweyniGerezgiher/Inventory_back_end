@@ -14,14 +14,19 @@ async function seedInitialData() {
       is_primary: true
     });
 
-    const hashedPassword = await bcrypt.hash('Admin@123', 10);
+    const role = await db.roles.create({
+      name: 'Admin',
+      status: 1
+    })
+    const hashedPassword = await bcrypt.hash('admin', 10);
 
     await db.users.create({
       first_name: 'Admin',
       last_name: 'User',
-      email: 'admin@example.com',
+      email: 'admin@admin.com',
       password: hashedPassword,
       status: 1,
+      role_id: role.id,
       location_id: location.id
     });
 
@@ -51,8 +56,11 @@ fs.readdirSync(__dirname)
         db[model.name] = model;
     });
 
+db.roles.hasMany(db.users, { foreignKey: 'role_id' });
+db.users.belongsTo(db.roles, { foreignKey: 'role_id', as: 'role' });
+
 // Users and Locations
-db.locations.hasMany(db.users, { foreignKey: 'location_id', as: 'users' });
+db.locations.hasMany(db.users, { foreignKey: 'location_id' });
 db.users.belongsTo(db.locations, { foreignKey: 'location_id', as: 'location' });
 
 // Product Categories and Products

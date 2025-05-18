@@ -3,11 +3,11 @@ const bcrypt = require('bcrypt');
 const models = require('../models/mysql');
 const { accessTokenSecret } = require('../config/auth');
 const User = models.users;
+const Location = models.locations;
+const Role = models.roles;
 const { err, success } = require('../utils/responses');
-const paginate = require('../utils/pagination/paginate');
 
 module.exports = {
-    // Register a new user
     addUser: async (req, res) => {
         try {
             const { first_name, last_name, email, password, location_id } = req.body;
@@ -40,7 +40,6 @@ module.exports = {
         }
     },
 
-    // Login user and generate JWT token
     login: async (req, res) => {
         try {
             const { email, password } = req.body;
@@ -72,7 +71,6 @@ module.exports = {
         }
     },
 
-    // Get user by ID
     getUser: async (req, res) => {
         try {
             let id = req.params.id;
@@ -84,14 +82,12 @@ module.exports = {
         }
     },
 
-    // Update user status
     updateStatus: async (req, res) => {
         try {
             const { status } = req.body;
             const user = await User.findOne({ where: { id: req.params.id } });
             if (!user) return res.status(404).json(err('', 'User not found'));
 
-            // Update user status
             user.status = status;
             await user.save();
 
@@ -101,22 +97,33 @@ module.exports = {
         }
     },
 
-    // Get all users with pagination
-    getAllUsers: async (req, res) => {
+   getAllUsers: async (req, res) => {
         try {
-            let { page, size } = req.query;
-            const users = await User.findAndCountAll({ 
-                ...paginate(page, size), 
-                order: [['created_at', 'DESC']] 
+            const users = await User.findAll({
+                order: [['created_at', 'DESC']],
+                include: [
+                    {
+                        model: Role,
+                        as: 'role',
+                        attributes: ['id', 'name' ]
+                    },
+                    {
+                        model: Location,
+                        as: 'location',
+                        attributes: ['id', 'name', 'address']
+                    }
+                ],
+                attributes: {
+                    exclude: ['password']
+                }
             });
 
-            res.status(200).json(success(users, ''));
+            return res.status(200).json(success(users, 'Users fetched successfully'));
         } catch (e) {
-            res.status(400).json(err('', e.message));
+            return res.status(500).json(err('Server error', e.message));
         }
     },
 
-    // Update user details
     updateUser: async (req, res) => {
         try {
             const { first_name, last_name, email, location_id } = req.body;
@@ -137,13 +144,11 @@ module.exports = {
         }
     },
 
-    // Delete a user
     deleteUser: async (req, res) => {
         try {
             const user = await User.findOne({ where: { id: req.params.id } });
             if (!user) return res.status(404).json(err('', 'User not found'));
 
-            // Delete the user
             await user.destroy();
 
             res.status(200).json(success('', 'User deleted successfully'));

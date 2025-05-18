@@ -1,6 +1,6 @@
 module.exports = (Sequelize, DataTypes) =>{
     return Sequelize.define(
-        'users',
+        'roles',
         {
             id: {
                 type: DataTypes.INTEGER,
@@ -8,29 +8,7 @@ module.exports = (Sequelize, DataTypes) =>{
                 primaryKey: true,
                 allowNull: false
             },
-            first_name: {
-                type: DataTypes.STRING(255),
-                allowNull: true
-            },
-            last_name: {
-                type: DataTypes.STRING(255),
-                allowNull: true
-            },
-            email: {
-                type: DataTypes.STRING(255),
-                allowNull: false,
-                unique: true,
-                
-            },
-            password: {
-                type: DataTypes.STRING(255),
-                allowNull: false
-            },
-            role_id: {
-                type: DataTypes.INTEGER,
-                allowNull: false
-            },
-            avatar: {
+            name: {
                 type: DataTypes.STRING(255),
                 allowNull: true
             },
@@ -38,10 +16,6 @@ module.exports = (Sequelize, DataTypes) =>{
                 type: DataTypes.INTEGER,
                 allowNull: false,
                 defaultValue: 0
-            },
-            location_id: {
-                type: DataTypes.INTEGER,
-                allowNull: false
             },
             created_at: {
                 type: DataTypes.DATE,

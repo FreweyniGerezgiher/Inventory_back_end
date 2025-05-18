@@ -6,11 +6,12 @@ const logger = require('morgan');
 const cors = require('cors');
 
 const indexRouter = require('./src/routes/index');
-const locationRouter = require('./src/routes/location');
+const locationRouter = require('./src/routes/locations');
+const roleRouter = require('./src/routes/roles');
 const productCategoryRouter = require('./src/routes/productCategory');
 const productStockRouter = require('./src/routes/productStock');
 const salesRouter = require('./src/routes/sales');
-const purchaseRouter = require('./src/routes/purchase');
+const purchaseRouter = require('./src/routes/purchases');
 const usersRouter = require('./src/routes/users');
 const productsRouter = require('./src/routes/products');
 
@@ -26,6 +27,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/product_category', productCategoryRouter);
 app.use('/products', productsRouter);
 app.use('/locations', locationRouter);
+app.use('/roles', roleRouter);
 app.use('/users', usersRouter)
 app.use('/sales', salesRouter);
 app.use('/product_stocks', productStockRouter);

@@ -9,9 +9,9 @@ const checkRole = require('../middlewares/checkRole')
 router.post('/add', userCtrl.addUser)
 router.post('/login', userCtrl.login)
 
-router.use(auth)
+// router.use(auth)
 
-router.get('/all', checkRole(['admin']), userCtrl.getAllUsers)
+router.get('/all', userCtrl.getAllUsers)
 router.get('/:id', userCtrl.getUser)
 
 router.put('/update_status/:status', checkRole(['admin']), userCtrl.updateStatus)

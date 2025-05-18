@@ -1,5 +1,3 @@
-const user = require("./user");
-
 module.exports = (Sequelize, DataTypes) => {
     return Sequelize.define('purchases', {
         id: {
