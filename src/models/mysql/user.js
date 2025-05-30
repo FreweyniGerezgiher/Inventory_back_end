@@ -26,6 +26,10 @@ module.exports = (Sequelize, DataTypes) =>{
                 type: DataTypes.STRING(255),
                 allowNull: false
             },
+            phone: {
+                type: DataTypes.STRING(50),
+                allowNull: false
+            },
             role_id: {
                 type: DataTypes.INTEGER,
                 allowNull: false
@@ -37,7 +41,7 @@ module.exports = (Sequelize, DataTypes) =>{
             status: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
-                defaultValue: 0
+                defaultValue: 1
             },
             location_id: {
                 type: DataTypes.INTEGER,

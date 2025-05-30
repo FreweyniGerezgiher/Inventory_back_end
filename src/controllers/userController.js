@@ -10,7 +10,7 @@ const { err, success } = require('../utils/responses');
 module.exports = {
     addUser: async (req, res) => {
         try {
-            const { first_name, last_name, email, password, location_id } = req.body;
+            const { first_name, last_name, email, role_id, password, phone, location_id } = req.body;
 
             // Check if email already exists
             const existing = await User.findOne({ where: { email } });
@@ -26,6 +26,8 @@ module.exports = {
                 first_name,
                 last_name,
                 email,
+                role_id,
+                phone,
                 password: hashedPassword,
                 location_id
             };

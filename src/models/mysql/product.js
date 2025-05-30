@@ -17,18 +17,30 @@ module.exports = (Sequelize, DataTypes) => {
                 type: DataTypes.INTEGER,
                 allowNull: false
             },
+             reorder_point: {
+                type: DataTypes.INTEGER,
+                allowNull: true
+            },
+            description: {
+                type: DataTypes.STRING(255),
+                allowNull: true
+            },
             sku: {
                 type: DataTypes.STRING(100),
                 allowNull: false,
                 unique: true
             },
-            cost_price: {
-                type: DataTypes.DECIMAL(10, 2),
-                allowNull: false
-            },
             selling_price: {
                 type: DataTypes.DECIMAL(10, 2),
                 allowNull: false
+            },
+            minimum_stock_level: {
+                type: DataTypes.INTEGER,
+                allowNull: true
+            },
+            maximum_stock_level: {
+                type: DataTypes.INTEGER,
+                allowNull: true
             },
             is_active: {
                 type: DataTypes.BOOLEAN,

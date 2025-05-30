@@ -14,7 +14,7 @@ const salesRouter = require('./src/routes/sales');
 const purchaseRouter = require('./src/routes/purchases');
 const usersRouter = require('./src/routes/users');
 const productsRouter = require('./src/routes/products');
-
+const supplierRouter = require('./src/routes/supplier');
 const app = express();
 
 app.use(cors())
@@ -25,6 +25,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/product_category', productCategoryRouter);
+app.use('/suppliers', supplierRouter);
 app.use('/products', productsRouter);
 app.use('/locations', locationRouter);
 app.use('/roles', roleRouter);

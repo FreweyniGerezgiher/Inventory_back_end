@@ -1,9 +1,9 @@
 const models = require('../models/mysql');
 const Sale = models.sales;
 const SaleItem = models.sales_items;
-
+const Location = models.locations;
+const Product = models.products;
 module.exports = {
-    // Add a new sale with items
     add: async (req, res) => {
         const { customer_name, total_amount, location_id, items } = req.body;
 
@@ -38,11 +38,57 @@ module.exports = {
         }
     },
 
-    // Get all sales with items
+    update: async (req, res) => {
+        const { id } = req.params;
+        const { customer_name, total_amount, location_id, items } = req.body;
+
+        if (!Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ success: false, message: 'Items are required' });
+        }
+
+        const t = await models.sequelize.transaction();
+
+        try {
+            // Update the Sale record
+            const sale = await Sale.findByPk(id);
+            if (!sale) {
+                await t.rollback();
+                return res.status(404).json({ success: false, message: 'Sale not found' });
+            }
+
+            await sale.update({ customer_name, total_amount, location_id }, { transaction: t });
+
+            // Delete existing SaleItems
+            await SaleItem.destroy({ where: { sale_id: id }, transaction: t });
+
+            // Re-insert new SaleItems
+            for (const item of items) {
+                await SaleItem.create({
+                    sale_id: id,
+                    product_id: item.product_id,
+                    quantity: item.quantity,
+                    unit_price: item.unit_price,
+                    total_price: item.quantity * item.unit_price
+                }, { transaction: t });
+            }
+
+            await t.commit();
+            res.status(200).json({ success: true, data: sale });
+
+        } catch (error) {
+            await t.rollback();
+            res.status(400).json({ success: false, message: error.message });
+        }
+    },
+
     getAll: async (req, res) => {
         try {
             const sales = await Sale.findAll({
-                include: [{ model: SaleItem, as: 'items' }]
+                include: [{ model: SaleItem, as: 'items', 
+                    include: [{
+                        model: Product,
+                        as: 'product'
+                    }]}, { model: Location, as: 'location' }]
             });
 
             res.status(200).json({ success: true, data: sales });
@@ -51,7 +97,6 @@ module.exports = {
         }
     },
 
-    // Get a sale by ID
     getById: async (req, res) => {
         try {
             const sale = await Sale.findByPk(req.params.id, {
@@ -68,7 +113,6 @@ module.exports = {
         }
     },
 
-    // Delete a sale and its items
     delete: async (req, res) => {
         const t = await models.sequelize.transaction();
 

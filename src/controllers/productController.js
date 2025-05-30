@@ -4,13 +4,12 @@ const ProductCategory = models.product_categories;
 module.exports = {
     add: async (req, res) => {
         try {
-            const { name, category_id, sku, cost_price, selling_price, is_taxable, is_active, image_url } = req.body;
+            const { name, category_id, sku, selling_price, is_taxable, is_active, image_url } = req.body;
 
             const product = await Product.create({
                 name,
                 category_id,
                 sku,
-                cost_price,
                 selling_price,
                 is_taxable: is_taxable || false,
                 is_active: is_active !== false,

@@ -87,6 +87,9 @@ db.purchase_items.belongsTo(db.products, { foreignKey: 'product_id', as: 'produc
 db.users.hasMany(db.purchases, { foreignKey: 'user_id', as: 'purchases' });
 db.purchases.belongsTo(db.users, { foreignKey: 'user_id', as: 'user' });
 
+db.suppliers.hasMany(db.purchases, { foreignKey: 'supplier_id', as: 'purchases' });
+db.purchases.belongsTo(db.suppliers, { foreignKey: 'supplier_id', as: 'supplier' });
+
 // Purchases and Locations
 db.locations.hasMany(db.purchases, { foreignKey: 'location_id', as: 'purchases' });
 db.purchases.belongsTo(db.locations, { foreignKey: 'location_id', as: 'location' });
@@ -105,7 +108,7 @@ db.sales.belongsTo(db.users, { foreignKey: 'user_id', as: 'user' });
 
 // Sales and Locations
 db.locations.hasMany(db.sales, { foreignKey: 'location_id', as: 'sales' });
-db.sales.belongsTo(db.locations, { foreignKey: 'location_id', as: 'locations' });
+db.sales.belongsTo(db.locations, { foreignKey: 'location_id', as: 'location' });
 
 
 Object.keys(db).forEach(function (modelName) {

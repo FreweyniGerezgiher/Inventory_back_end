@@ -9,8 +9,8 @@ module.exports = (Sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
-        supplier_name: {
-            type: DataTypes.STRING(255),
+        supplier_id: {
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         total_amount: {
