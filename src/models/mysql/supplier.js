@@ -1,64 +1,73 @@
-module.exports = (Sequelize, DataTypes) => {
-    return Sequelize.define('suppliers', {
-        id: {
-            type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true,
-            allowNull: false
-        },
-        name: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-            unique: true
-        },
-        company_name: {
-            type: DataTypes.STRING(255),
-            allowNull: true
-        },
+module.exports = (sequelize, DataTypes) => {
+  const Suppliers = sequelize.define('suppliers', {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+      allowNull: false
+    },
+    name: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      unique: true
+    },
+    company_name: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    email: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      unique: true
+    },
+    phone: {
+      type: DataTypes.STRING(50),
+      allowNull: false
+    },
+    alternate_phone: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    address: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    bank_name: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    account_number: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    notes: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      defaultValue: sequelize.fn('NOW')
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      defaultValue: sequelize.fn('NOW')
+    }
+  }, {
+    freezeTableName: true,
+    timestamps: false,
+    underscored: true
+  });
 
-        email: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-            unique: true
-        },
-        phone: {
-            type: DataTypes.STRING(50),
-            allowNull: false
-        },
-        alternate_phone: {
-            type: DataTypes.STRING(50),
-            allowNull: true
-        },
-        address: {
-            type: DataTypes.TEXT,
-            allowNull: true
-        },
-
-         bank_name: {
-            type: DataTypes.STRING(100),
-            allowNull: true
-        },
-        account_number: {
-            type: DataTypes.STRING(50),
-            allowNull: true
-        },
-        notes: {
-            type: DataTypes.TEXT,
-            allowNull: true
-        },
-        is_active: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: true
-        },
-        created_at: {
-            type: DataTypes.DATE,
-            defaultValue: Sequelize.fn('NOW')
-        },
-        updated_at: {
-            type: DataTypes.DATE,
-            defaultValue: Sequelize.fn('NOW')
-        }
-    }, {
-        freezeTableName: true
+  Suppliers.associate = (models) => {
+    Suppliers.hasMany(models.purchases, {
+      foreignKey: 'supplier_id',
+      as: 'purchases'
     });
+  };
+
+  return Suppliers;
 };

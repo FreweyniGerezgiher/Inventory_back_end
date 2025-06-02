@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const suppliersController = require('../controllers/supplierController');
+const auth = require('../middlewares/authJwt')
+const checkRole = require('../middlewares/checkRole')
 
-router.post('/add', suppliersController.addSupplier);
-router.get('/all', suppliersController.getAllSuppliers);
-router.get('/:id', suppliersController.getSupplier);
-router.put('/:id', suppliersController.updateSupplier);
-router.delete('/:id', suppliersController.deleteSupplier);
+router.use(auth)
+router.post('/add', checkRole(['Admin']), suppliersController.addSupplier);
+router.get('/all', checkRole(['Admin']), suppliersController.getAllSuppliers);
+router.get('/:id', checkRole(['Admin']), suppliersController.getSupplier);
+router.put('/:id', checkRole(['Admin']), suppliersController.updateSupplier);
+router.delete('/:id', checkRole(['Admin']), suppliersController.deleteSupplier);
 
 module.exports = router;

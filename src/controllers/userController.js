@@ -12,16 +12,12 @@ module.exports = {
         try {
             const { first_name, last_name, email, role_id, password, phone, location_id } = req.body;
 
-            // Check if email already exists
             const existing = await User.findOne({ where: { email } });
             if (existing) {
                 return res.status(409).json(err('', 'Email already exists'));
             }
 
-            // Hash the password
             const hashedPassword = await bcrypt.hash(password, 10);
-
-            // Create new user
             const user = {
                 first_name,
                 last_name,
@@ -40,36 +36,55 @@ module.exports = {
             console.error(e);
             res.status(500).json(err('', 'User registration failed'));
         }
-    },
-
+},
     login: async (req, res) => {
         try {
-            const { email, password } = req.body;
-            console.log(email, password)
+        const { email, password } = req.body;
 
-            // Find user by email
-            const user = await User.findOne({ where: { email } });
-            if (!user) {
-                return res.status(404).json(err('', 'User not found'));
+        const user = await User.findOne({
+            where: { email },
+            include: [
+            {
+                model: Role,
+                as: 'role',
+                attributes: ['name']
+            }, 
+            {
+                model: Location,
+                as: 'location',
+                attributes: ['id']
             }
+            ]
+        });
 
-            // Compare password
-            const validPassword = await bcrypt.compare(password, user.password);
-            if (!validPassword) {
-                return res.status(401).json(err('', 'Invalid password'));
-            }
+        if (!user) {
+            return res.status(404).json(err('', 'User not found'));
+        }
 
-            // Create JWT token
-            const accessToken = jwt.sign(
-                { id: user.id, email: user.email },
-                accessTokenSecret,
-                { expiresIn: '1h' }
-            );
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+            return res.status(401).json(err('', 'Invalid password'));
+        }
 
-            res.status(200).json(success({ accessToken }, 'Login successful'));
+        const tokenPayload = {
+            user_id: user.id,
+            email: user.email,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            role: user.role?.name,
+            location_id: user.location?.id
+        };
+
+        const accessToken = jwt.sign(tokenPayload, accessTokenSecret, { expiresIn: '2h' });
+
+        return res.status(200).json(success({
+            accessToken,
+            user: tokenPayload
+        }, 'Login successful'));
 
         } catch (e) {
-            res.status(400).json(err('', e.message));
+        console.error('Login error:', e);
+        return res.status(500).json(err('', 'Internal server error'));
         }
     },
 

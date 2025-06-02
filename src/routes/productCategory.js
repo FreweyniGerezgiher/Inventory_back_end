@@ -1,15 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const productCategoryController = require('../controllers/productCatController');
+const auth = require('../middlewares/authJwt')
+const checkRole = require('../middlewares/checkRole')
 
-router.post('/add', productCategoryController.add);
+router.use(auth)
+router.post('/add', checkRole(['Admin']), productCategoryController.add);
 
-router.get('/all', productCategoryController.getAll);
+router.get('/all', checkRole(['Admin']), productCategoryController.getAll);
 
-router.get('/:id', productCategoryController.getById);
+router.get('/:id', checkRole(['Admin']), productCategoryController.getById);
 
-router.put('/:id', productCategoryController.update);
+router.put('/:id', checkRole(['Admin']), productCategoryController.update);
 
-router.delete('/:id', productCategoryController.delete);
+router.delete('/:id', checkRole(['Admin']), productCategoryController.delete);
 
 module.exports = router;

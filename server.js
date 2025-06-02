@@ -1,6 +1,14 @@
 const app = require('./app');
 const debug = require('debug')('api:server');
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
+
+// Ensure upload directory exists
+const uploadDir = path.join(__dirname, 'uploads/products');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);

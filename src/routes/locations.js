@@ -1,15 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const locationController = require('../controllers/locationController');
+const auth = require('../middlewares/authJwt')
+const checkRole = require('../middlewares/checkRole')
 
-router.post('/add', locationController.Add);
+router.use(auth)
+router.post('/add', checkRole(['Admin']), locationController.Add);
 
-router.get('/all', locationController.getAll);
+router.get('/all', checkRole(['Admin']), locationController.getAll);
 
-router.get('/:id', locationController.getLocation);
+router.get('/:id', checkRole(['Admin']), locationController.getLocation);
 
-router.put('/:id', locationController.update);
+router.put('/:id', checkRole(['Admin']), locationController.update);
 
-router.delete('/:id', locationController.delete);
+router.delete('/:id', checkRole(['Admin']), locationController.delete);
 
 module.exports = router;

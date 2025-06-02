@@ -1,15 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const productStockController = require('../controllers/productStockController');
+const auth = require('../middlewares/authJwt')
+const checkRole = require('../middlewares/checkRole')
 
-router.post('/add', productStockController.add);
+router.use(auth)
 
 router.get('/all', productStockController.getAll);
-
-router.get('/:id', productStockController.getById);
-
-router.put('/:id', productStockController.update);
-
-router.delete('/:id', productStockController.delete);
 
 module.exports = router;

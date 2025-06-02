@@ -3,10 +3,12 @@ const Sale = models.sales;
 const SaleItem = models.sales_items;
 const Location = models.locations;
 const Product = models.products;
+const { Op } = require("sequelize");
+
 module.exports = {
     add: async (req, res) => {
-        const { customer_name, total_amount, location_id, items } = req.body;
-
+        const { customer_name, total_amount, reference_number, location_id, items } = req.body;
+        console.log(reference_number);
         if (!Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ success: false, message: 'Items are required' });
         }
@@ -17,7 +19,9 @@ module.exports = {
             const sale = await Sale.create({
                 customer_name,
                 total_amount,
-                location_id
+                location_id,
+                reference_number,
+                created_by: req.user.user_id
             }, { transaction: t });
 
             for (const item of items) {
@@ -40,7 +44,7 @@ module.exports = {
 
     update: async (req, res) => {
         const { id } = req.params;
-        const { customer_name, total_amount, location_id, items } = req.body;
+        const { customer_name, total_amount, reference_number, location_id, items } = req.body;
 
         if (!Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ success: false, message: 'Items are required' });
@@ -56,7 +60,7 @@ module.exports = {
                 return res.status(404).json({ success: false, message: 'Sale not found' });
             }
 
-            await sale.update({ customer_name, total_amount, location_id }, { transaction: t });
+            await sale.update({ customer_name, reference_number, total_amount, location_id }, { transaction: t });
 
             // Delete existing SaleItems
             await SaleItem.destroy({ where: { sale_id: id }, transaction: t });
@@ -80,15 +84,36 @@ module.exports = {
             res.status(400).json({ success: false, message: error.message });
         }
     },
-
     getAll: async (req, res) => {
+        const { search } = req.query;
+
+        const whereClause = {};
+
+        if (search) {
+            whereClause[Op.or] = [
+                { customer_name: { [Op.like]: `%${search}%` } },
+                { reference_number: { [Op.like]: `%${search}%` } }
+            ];
+        }
+
         try {
             const sales = await Sale.findAll({
-                include: [{ model: SaleItem, as: 'items', 
-                    include: [{
-                        model: Product,
-                        as: 'product'
-                    }]}, { model: Location, as: 'location' }]
+                where: whereClause,
+                include: [
+                    {
+                        model: SaleItem,
+                        as: 'items',
+                        include: [{
+                            model: Product,
+                            as: 'product'
+                        }]
+                    },
+                    {
+                        model: Location,
+                        as: 'location'
+                    }
+                ],
+                order: [['created_at', 'DESC']]
             });
 
             res.status(200).json({ success: true, data: sales });
@@ -112,7 +137,6 @@ module.exports = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
-
     delete: async (req, res) => {
         const t = await models.sequelize.transaction();
 

@@ -4,9 +4,13 @@ const PurchaseItem = models.purchase_items;
 const Location = models.locations;
 const Product = models.products;
 const Supplier = models.suppliers;
+const { Op } = require("sequelize");
+const paginate = require('../utils/pagination/paginate')
+
+
 module.exports = {
     add: async (req, res) => {
-        const { user_id, supplier_id, total_amount, location_id, items } = req.body;
+        const { user_id, supplier_id, reference_number, total_amount, location_id, items } = req.body;
 
         if (!Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ success: false, message: 'Items are required' });
@@ -18,8 +22,10 @@ module.exports = {
             const purchase = await Purchase.create({
                 user_id,
                 supplier_id,
+                reference_number,
                 total_amount,
                 location_id,
+                created_by: req.user.user_id
             }, { transaction: t });
 
             for (const item of items) {
@@ -43,7 +49,7 @@ module.exports = {
 
     update: async (req, res) => {
         const { id } = req.params;
-        const { user_id, supplier_id, total_amount, location_id, items } = req.body;
+        const { user_id, supplier_id, reference_number, total_amount, location_id, items } = req.body;
 
         if (!Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ success: false, message: 'Items are required' });
@@ -62,6 +68,7 @@ module.exports = {
                 user_id,
                 supplier_id,
                 total_amount,
+                reference_number,
                 location_id
             }, { transaction: t });
 
@@ -94,20 +101,45 @@ module.exports = {
             await t.rollback();
             res.status(400).json({ 
                 success: false, 
-                message: error.message,
-                error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+                message: error.message
             });
         }
     },
-
     getAll: async (req, res) => {
+        const { page, size, search } = req.query;
+        const whereClause = {};
+
+        if (search) {
+            whereClause[Op.or] = [
+                { reference_number: { [Op.like]: `%${search}%` } }
+            ];
+        }
+
         try {
             const purchases = await Purchase.findAll({
-                include: [{ model: PurchaseItem, as: 'items', 
-                    include: [{
-                        model: Product,
-                        as: 'product'
-                }]}, { model: Location, as: 'location' }, {model: Supplier, as: 'supplier'}]
+                ...paginate(page, size),
+                where: whereClause,
+                include: [
+                    {
+                        model: PurchaseItem,
+                        as: 'items',
+                        include: [
+                            {
+                                model: Product,
+                                as: 'product'
+                            }
+                        ]
+                    },
+                    {
+                        model: Location,
+                        as: 'location'
+                    },
+                    {
+                        model: Supplier,
+                        as: 'supplier'
+                    }
+                ],
+                order: [['created_at', 'DESC']]
             });
 
             res.status(200).json({ success: true, data: purchases });

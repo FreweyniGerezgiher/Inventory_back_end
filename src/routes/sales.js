@@ -1,13 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const salesController = require('../controllers/salesController');
+const auth = require('../middlewares/authJwt')
+const checkRole = require('../middlewares/checkRole')
 
-router.post('/add', salesController.add);
+router.use(auth)
+router.post('/add', checkRole(['Admin']), salesController.add);
 
-router.get('/all', salesController.getAll);
+router.get('/all', checkRole(['Admin']), salesController.getAll);
 
-router.get('/:id', salesController.getById);
-router.put('/:id', salesController.update);
-router.delete('/:id', salesController.delete);
+router.get('/:id', checkRole(['Admin']), salesController.getById);
+router.put('/:id', checkRole(['Admin']), salesController.update);
+router.delete('/:id', checkRole(['Admin']), salesController.delete);
 
 module.exports = router;
