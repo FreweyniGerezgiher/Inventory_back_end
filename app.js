@@ -9,12 +9,12 @@ const indexRouter = require('./src/routes/index');
 const locationRouter = require('./src/routes/locations');
 const roleRouter = require('./src/routes/roles');
 const productCategoryRouter = require('./src/routes/productCategory');
-const productStockRouter = require('./src/routes/productStock');
 const salesRouter = require('./src/routes/sales');
 const purchaseRouter = require('./src/routes/purchases');
 const usersRouter = require('./src/routes/users');
 const productsRouter = require('./src/routes/products');
 const supplierRouter = require('./src/routes/supplier');
+const transferRouter = require('./src/routes/transfer');
 const app = express();
 
 app.use(cors())
@@ -31,8 +31,8 @@ app.use('/locations', locationRouter);
 app.use('/roles', roleRouter);
 app.use('/users', usersRouter)
 app.use('/sales', salesRouter);
-app.use('/product_stocks', productStockRouter);
 app.use('/purchases', purchaseRouter);
+app.use('/transfers', transferRouter);
 app.use('/', indexRouter);
 
 // catch 404 and forward to error handler

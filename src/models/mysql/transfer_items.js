@@ -16,11 +16,6 @@ module.exports = (sequelize, DataTypes) => {
     quantity: {
       type: DataTypes.INTEGER,
       allowNull: false,
-    },
-
-    notes: {
-      type: DataTypes.TEXT,
-      allowNull: true
     }
   }, {
     freezeTableName: true,

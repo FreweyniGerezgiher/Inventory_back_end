@@ -4,13 +4,14 @@ const PurchaseItem = models.purchase_items;
 const Location = models.locations;
 const Product = models.products;
 const Supplier = models.suppliers;
-const { Op } = require("sequelize");
+const { Op,Sequelize } = require("sequelize");
 const paginate = require('../utils/pagination/paginate')
-
+const ProductStock = models.product_stocks;
 
 module.exports = {
-    add: async (req, res) => {
-        const { user_id, supplier_id, reference_number, total_amount, location_id, items } = req.body;
+
+        add: async (req, res) => {
+        const { supplier_id, reference_number, total_amount, location_id, items } = req.body;
 
         if (!Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ success: false, message: 'Items are required' });
@@ -20,22 +21,39 @@ module.exports = {
 
         try {
             const purchase = await Purchase.create({
-                user_id,
-                supplier_id,
-                reference_number,
-                total_amount,
-                location_id,
-                created_by: req.user.user_id
+            supplier_id,
+            reference_number,
+            total_amount,
+            location_id,
+            created_by: req.user.user_id
             }, { transaction: t });
 
             for (const item of items) {
-                await PurchaseItem.create({
-                    purchase_id: purchase.id,
-                    product_id: item.product_id,
-                    quantity: item.quantity,
-                    unit_price: item.unit_price,
-                    total_price: item.quantity * item.unit_price
+            await PurchaseItem.create({
+                purchase_id: purchase.id,
+                product_id: item.product_id,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                total_price: item.quantity * item.unit_price
+            }, { transaction: t });
+
+            const stock = await ProductStock.findOne({
+                where: { product_id: item.product_id, location_id },
+                transaction: t,
+                lock: t.LOCK.UPDATE
+            });
+
+            if (stock) {
+                await stock.update({
+                quantity_in_stock: stock.quantity_in_stock + item.quantity
                 }, { transaction: t });
+            } else {
+                await ProductStock.create({
+                product_id: item.product_id,
+                location_id,
+                quantity_in_stock: item.quantity
+                }, { transaction: t });
+            }
             }
 
             await t.commit();
@@ -45,74 +63,115 @@ module.exports = {
             await t.rollback();
             res.status(400).json({ success: false, message: error.message });
         }
-    },
+        },
+
 
     update: async (req, res) => {
-        const { id } = req.params;
-        const { user_id, supplier_id, reference_number, total_amount, location_id, items } = req.body;
+  const { id } = req.params;
+  const { supplier_id, reference_number, total_amount, location_id, items } = req.body;
 
-        if (!Array.isArray(items) || items.length === 0) {
-            return res.status(400).json({ success: false, message: 'Items are required' });
-        }
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ success: false, message: 'Items are required' });
+  }
 
-        const t = await models.sequelize.transaction();
+  const t = await models.sequelize.transaction();
 
-        try {
-            const purchase = await Purchase.findByPk(id);
-            if (!purchase) {
-                await t.rollback();
-                return res.status(404).json({ success: false, message: 'Purchase not found' });
-            }
+  try {
+    const purchase = await Purchase.findByPk(id, {
+      include: [{ model: PurchaseItem, as: 'items' }],
+      transaction: t
+    });
 
-            await purchase.update({
-                user_id,
-                supplier_id,
-                total_amount,
-                reference_number,
-                location_id
-            }, { transaction: t });
+    if (!purchase) {
+      await t.rollback();
+      return res.status(404).json({ success: false, message: 'Purchase not found' });
+    }
 
-            await PurchaseItem.destroy({ 
-                where: { purchase_id: id }, 
-                transaction: t 
-            });
+    // Revert previous stock
+    for (const oldItem of purchase.items) {
+      const stock = await ProductStock.findOne({
+        where: { product_id: oldItem.product_id, location_id },
+        transaction: t,
+        lock: t.LOCK.UPDATE
+      });
 
-            for (const item of items) {
-                await PurchaseItem.create({
-                    purchase_id: id,
-                    product_id: item.product_id,
-                    quantity: item.quantity,
-                    unit_price: item.unit_price,
-                    total_price: item.quantity * item.unit_price
-                }, { transaction: t });
+      if (stock) {
+        await stock.update({
+          quantity_in_stock: stock.quantity_in_stock - oldItem.quantity
+        }, { transaction: t });
+      }
+    }
 
-            }
+    await purchase.update({
+      supplier_id,
+      total_amount,
+      reference_number,
+      location_id,
+      updated_by: req.user.user_id
+    }, { transaction: t });
 
-            await t.commit();
-            res.status(200).json({ 
-                success: true, 
-                data: {
-                    ...purchase.toJSON(),
-                    items
-                }
-            });
+    await PurchaseItem.destroy({
+      where: { purchase_id: id },
+      transaction: t
+    });
 
-        } catch (error) {
-            await t.rollback();
-            res.status(400).json({ 
-                success: false, 
-                message: error.message
-            });
-        }
-    },
+    for (const item of items) {
+      await PurchaseItem.create({
+        purchase_id: id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.quantity * item.unit_price
+      }, { transaction: t });
+
+      const stock = await ProductStock.findOne({
+        where: { product_id: item.product_id, location_id },
+        transaction: t,
+        lock: t.LOCK.UPDATE
+      });
+
+      if (stock) {
+        await stock.update({
+          quantity_in_stock: stock.quantity_in_stock + item.quantity
+        }, { transaction: t });
+      } else {
+        await ProductStock.create({
+          product_id: item.product_id,
+          location_id,
+          quantity_in_stock: item.quantity
+        }, { transaction: t });
+      }
+    }
+
+    await t.commit();
+    res.status(200).json({
+      success: true,
+      data: {
+        ...purchase.toJSON(),
+        items
+      }
+    });
+
+  } catch (error) {
+    await t.rollback();
+    res.status(400).json({ success: false, message: error.message });
+  }
+},
+
     getAll: async (req, res) => {
         const { page, size, search } = req.query;
+        const { role, location_id } = req.user; 
+
         const whereClause = {};
 
         if (search) {
             whereClause[Op.or] = [
                 { reference_number: { [Op.like]: `%${search}%` } }
             ];
+        }
+
+        if (role !== 'Admin') {
+        whereClause.location_id = location_id;
         }
 
         try {
@@ -148,29 +207,63 @@ module.exports = {
         }
     },
 
-    getById: async (req, res) => {
-        try {
-            const purchase = await Purchase.findByPk(req.params.id, {
-                include: [{ model: PurchaseItem, as: 'items' }]
-            });
+    getPurchaseStats: async (req, res) => {
+    const { role, location_id } = req.user;
 
-            if (!purchase) {
-                return res.status(404).json({ success: false, message: 'Purchase not found' });
+    const whereClause = {};
+
+    if (role !== 'Admin') {
+        whereClause.location_id = location_id;
+    }
+
+    try {
+        // Get both count and sum in a single query
+        const stats = await Purchase.findOne({
+            where: whereClause,
+            attributes: [
+                [Sequelize.fn('count', Sequelize.col('id')), 'totalPurchases'],
+                [Sequelize.fn('sum', Sequelize.col('total_amount')), 'totalAmount']
+            ],
+            raw: true
+        });
+
+        res.status(200).json({ 
+            success: true, 
+            data: {
+                totalPurchases: parseInt(stats?.totalPurchases || 0),
+                totalAmount: parseFloat(stats?.totalAmount || 0)
             }
-
-            res.status(200).json({ success: true, data: purchase });
-        } catch (error) {
-            res.status(500).json({ success: false, message: error.message });
-        }
-    },
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+},
 
     delete: async (req, res) => {
         const t = await models.sequelize.transaction();
+
         try {
-            const purchase = await Purchase.findByPk(req.params.id);
+            const purchase = await Purchase.findByPk(req.params.id, {
+            include: [{ model: PurchaseItem, as: 'items' }],
+            transaction: t
+            });
 
             if (!purchase) {
-                return res.status(404).json({ success: false, message: 'Purchase not found' });
+            return res.status(404).json({ success: false, message: 'Purchase not found' });
+            }
+
+            for (const item of purchase.items) {
+            const stock = await ProductStock.findOne({
+                where: { product_id: item.product_id, location_id: purchase.location_id },
+                transaction: t,
+                lock: t.LOCK.UPDATE
+            });
+
+            if (stock) {
+                await stock.update({
+                quantity_in_stock: stock.quantity_in_stock - item.quantity
+                }, { transaction: t });
+            }
             }
 
             await PurchaseItem.destroy({ where: { purchase_id: purchase.id }, transaction: t });
@@ -183,5 +276,6 @@ module.exports = {
             await t.rollback();
             res.status(500).json({ success: false, message: error.message });
         }
-    }
+        },
+
 };

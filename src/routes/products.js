@@ -10,8 +10,7 @@ router.post('/add', checkRole(['Admin']), productController.add);
 
 router.get('/all', checkRole(['Admin']), productController.getAll);
 
-router.get('/:id', checkRole(['Admin']), productController.getById);
-
+router.get('/outofstock', productController.getOutOfStock);
 router.put('/:id', checkRole(['Admin']), productController.update);
 
 router.delete('/:id', checkRole(['Admin']), productController.delete);

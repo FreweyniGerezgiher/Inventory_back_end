@@ -8,8 +8,8 @@ router.use(auth)
 router.post('/add', checkRole(['Admin']), purchaseController.add);
 
 router.get('/all', checkRole(['Admin']), purchaseController.getAll);
+router.get('/stats', checkRole(['Admin']), purchaseController.getPurchaseStats);
 
-router.get('/:id', checkRole(['Admin']), purchaseController.getById);
 router.put('/:id', checkRole(['Admin']), purchaseController.update);
 router.delete('/:id', checkRole(['Admin']), purchaseController.delete);
 
