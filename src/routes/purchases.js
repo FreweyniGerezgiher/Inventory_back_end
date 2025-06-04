@@ -5,12 +5,12 @@ const auth = require('../middlewares/authJwt')
 const checkRole = require('../middlewares/checkRole')
 
 router.use(auth)
-router.post('/add', checkRole(['Admin']), purchaseController.add);
+router.post('/add', checkRole(['Admin', 'Purchase Officer', 'General Manager']), purchaseController.add);
 
-router.get('/all', checkRole(['Admin']), purchaseController.getAll);
-router.get('/stats', checkRole(['Admin']), purchaseController.getPurchaseStats);
+router.get('/all', purchaseController.getAll);
+router.get('/stats', purchaseController.getPurchaseStats);
 
-router.put('/:id', checkRole(['Admin']), purchaseController.update);
-router.delete('/:id', checkRole(['Admin']), purchaseController.delete);
+router.put('/:id', checkRole(['Admin', 'Purchase Officer', 'General Manager']), purchaseController.update);
+router.delete('/:id', checkRole(['Admin', 'Purchase Officer', 'General Manager']), purchaseController.delete);
 
 module.exports = router;

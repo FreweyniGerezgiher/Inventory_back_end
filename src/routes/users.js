@@ -12,7 +12,7 @@ router.post('/add', checkRole(['Admin']), userCtrl.addUser)
 router.get('/all', checkRole(['Admin']), userCtrl.getAllUsers)
 router.get('/:id', checkRole(['Admin']), userCtrl.getUser)
 
-router.put('/update_status/:status', checkRole(['Admin']), userCtrl.updateStatus)
+router.put('/update_status/:id/:status', checkRole(['Admin']), userCtrl.updateStatus)
 
 router.put('/:id', checkRole(['Admin']), userCtrl.updateUser)
 

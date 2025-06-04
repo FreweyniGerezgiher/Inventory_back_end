@@ -7,9 +7,7 @@ const checkRole = require('../middlewares/checkRole')
 router.use(auth)
 router.post('/add', checkRole(['Admin']), productCategoryController.add);
 
-router.get('/all', checkRole(['Admin']), productCategoryController.getAll);
-
-router.get('/:id', checkRole(['Admin']), productCategoryController.getById);
+router.get('/all', productCategoryController.getAll);
 
 router.put('/:id', checkRole(['Admin']), productCategoryController.update);
 
