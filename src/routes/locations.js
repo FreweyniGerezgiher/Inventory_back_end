@@ -7,7 +7,7 @@ const checkRole = require('../middlewares/checkRole')
 router.use(auth)
 router.post('/add', checkRole(['Admin']), locationController.Add);
 
-router.get('/all', checkRole(['Admin']), locationController.getAll);
+router.get('/all', locationController.getAll);
 
 router.get('/:id', checkRole(['Admin']), locationController.getLocation);
 

@@ -23,14 +23,16 @@ function normalizePort(val) {
   var port = parseInt(val, 10);
 
   if (isNaN(port)) {
-    // named pipe
+    // named pipeparseInt
     return val;
+  var port = parseInt(val, 10);
   }
-
+port
   if (port >= 0) {
     // port number
     return port;
   }
+  var port = parseInt(val, 10);
 
   return false;
 }

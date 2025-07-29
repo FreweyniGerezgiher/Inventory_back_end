@@ -6,7 +6,7 @@ const checkRole = require('../middlewares/checkRole')
 
 router.use(auth)
 router.post('/add', checkRole(['Admin']), suppliersController.addSupplier);
-router.get('/all', checkRole(['Admin']), suppliersController.getAllSuppliers);
+router.get('/all', suppliersController.getAllSuppliers);
 router.get('/:id', checkRole(['Admin']), suppliersController.getSupplier);
 router.put('/:id', checkRole(['Admin']), suppliersController.updateSupplier);
 router.delete('/:id', checkRole(['Admin']), suppliersController.deleteSupplier);

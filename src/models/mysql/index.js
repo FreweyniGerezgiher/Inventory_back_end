@@ -55,8 +55,8 @@ async function seedInitialData(db) {
     const hashedPassword = await bcrypt.hash('admin', 10);
 
     await db.users.create({
-      first_name: 'John',
-      last_name: 'Doe',
+      first_name: 'mehamed',
+      last_name: 'jemal',
       email: 'admin@admin.com',
       password: hashedPassword,
       status: 1,
